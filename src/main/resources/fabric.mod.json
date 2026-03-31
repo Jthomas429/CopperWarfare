@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "copperwarfare",
+  "version": "${version}",
+  "name": "CopperWarfare",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/copperwarfare/icon.png",
+  "environment": "server",
+  "entrypoints": {
+    "fabric-datagen": [
+      "net.jthomas.copperwarfare.client.CopperwarfareDataGenerator"
+    ],
+    "main": [
+      "net.jthomas.copperwarfare.Copperwarfare"
+    ]
+  },
+  "mixins": [
+    "copperwarfare.mixins.json",
+    {
+      "config": "copperwarfare.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
