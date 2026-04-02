@@ -9,6 +9,7 @@ import net.jthomas.copperwarfare.ModSensors;
 import net.jthomas.copperwarfare.entity.ai.FactionAggressionBehavior;
 import net.jthomas.copperwarfare.entity.ai.GolemBreedBehavior;
 import net.jthomas.copperwarfare.entity.ai.GolemMeleeAttackBehavior;
+import net.jthomas.copperwarfare.entity.ai.GolemRetaliationBehavior;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket;
@@ -134,11 +135,13 @@ public class OverhauledCopperGolem extends CopperGolem implements PolymerEntity 
                         MemoryModuleType.LOOK_TARGET, // Needed for looking around
                         MemoryModuleType.PATH,        // Needed for pathfinding
                         MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE, // Needed for pathfinding timeout
-                        MemoryModuleType.NEAREST_VISIBLE_LIVING_ENTITIES
+                        MemoryModuleType.NEAREST_VISIBLE_LIVING_ENTITIES,
+                        MemoryModuleType.HURT_BY_ENTITY // Needed for retaliation attack
                 ),
                 ImmutableList.of(
                         SensorType.NEAREST_PLAYERS,
                         SensorType.NEAREST_LIVING_ENTITIES,
+                        SensorType.HURT_BY,
                         ModSensors.TUNING_ROD_SENSOR
                 )
         );
@@ -161,6 +164,7 @@ public class OverhauledCopperGolem extends CopperGolem implements PolymerEntity 
         ));
 
         brain.addActivity(Activity.IDLE, ImmutableList.of(
+                Pair.of(0, new GolemRetaliationBehavior()),
                 Pair.of(1, new GolemBreedBehavior()),
                 Pair.of(2, SetEntityLookTargetSometimes.create(EntityType.PLAYER, 6.0F, UniformInt.of(40, 80))),
                 Pair.of(3, new RunOne<>(ImmutableList.of(
@@ -175,9 +179,10 @@ public class OverhauledCopperGolem extends CopperGolem implements PolymerEntity 
 
         brain.addActivityWithConditions(Activity.FIGHT,
                 ImmutableList.of(
-                        Pair.of(0, StopAttackingIfTargetInvalid.create()),
-                        Pair.of(1, SetWalkTargetFromAttackTargetIfTargetOutOfReach.create(1.2f)),
-                        Pair.of(2, new GolemMeleeAttackBehavior())
+                        Pair.of(0, new GolemRetaliationBehavior()),
+                        Pair.of(1, StopAttackingIfTargetInvalid.create()),
+                        Pair.of(2, SetWalkTargetFromAttackTargetIfTargetOutOfReach.create(1.2f)),
+                        Pair.of(3, new GolemMeleeAttackBehavior())
                 ),
                 // FIGHT is only eligible when we actually have a target
                 ImmutableSet.of(Pair.of(MemoryModuleType.ATTACK_TARGET, MemoryStatus.VALUE_PRESENT))
