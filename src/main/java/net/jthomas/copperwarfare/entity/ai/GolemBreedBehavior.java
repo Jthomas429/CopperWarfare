@@ -83,4 +83,9 @@ public class GolemBreedBehavior extends Behavior<CopperGolem> {
     protected boolean canStillUse(ServerLevel level, CopperGolem golem, long gameTime) {
         return golem instanceof OverhauledCopperGolem overhauled && overhauled.isInLove();
     }
+
+    @Override
+    protected void stop(ServerLevel level, CopperGolem golem, long gameTime) {
+        golem.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
+    }
 }

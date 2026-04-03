@@ -6,10 +6,7 @@ import com.mojang.serialization.Dynamic;
 import eu.pb4.polymer.core.api.entity.PolymerEntity;
 import net.jthomas.copperwarfare.Copperwarfare;
 import net.jthomas.copperwarfare.ModSensors;
-import net.jthomas.copperwarfare.entity.ai.FactionAggressionBehavior;
-import net.jthomas.copperwarfare.entity.ai.GolemBreedBehavior;
-import net.jthomas.copperwarfare.entity.ai.GolemMeleeAttackBehavior;
-import net.jthomas.copperwarfare.entity.ai.GolemRetaliationBehavior;
+import net.jthomas.copperwarfare.entity.ai.*;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket;
@@ -19,6 +16,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.util.valueproviders.UniformInt;
+import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.*;
@@ -37,9 +35,11 @@ import com.google.common.collect.ImmutableSet;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -167,14 +167,8 @@ public class OverhauledCopperGolem extends CopperGolem implements PolymerEntity 
                 Pair.of(0, new GolemRetaliationBehavior()),
                 Pair.of(1, new GolemBreedBehavior()),
                 Pair.of(2, SetEntityLookTargetSometimes.create(EntityType.PLAYER, 6.0F, UniformInt.of(40, 80))),
-                Pair.of(3, new RunOne<>(ImmutableList.of(
-                        // Give 'DoNothing' a higher weight to make them stand still more often
-                        Pair.of(new DoNothing(30, 60), 2),
-                        // Give 'RandomStroll' a lower weight
-                        Pair.of(RandomStroll.stroll((float) this.inheritedSpeedModifier), 1),
-                        // Looking around while standing still
-                        Pair.of(SetEntityLookTargetSometimes.create(EntityType.PLAYER, 6.0F, UniformInt.of(30, 60)), 1)
-                )))
+                Pair.of(3, new GolemWanderBehavior(0.8f)),
+                Pair.of(4, new DoNothing(30, 60))
         ));
 
         brain.addActivityWithConditions(Activity.FIGHT,
@@ -196,6 +190,14 @@ public class OverhauledCopperGolem extends CopperGolem implements PolymerEntity 
 
     @Override
     protected void customServerAiStep(ServerLevel serverLevel) {
+//        // Temporary diagnostics — add this block
+//        if (this.tickCount % 40 == 0) {
+//            boolean hasWalkTarget = this.getBrain().getMemory(MemoryModuleType.WALK_TARGET).isPresent();
+//            boolean hasAttackTarget = this.getBrain().getMemory(MemoryModuleType.ATTACK_TARGET).isPresent();
+//            Copperwarfare.LOGGER.info("[AI] Active: {} | WALK_TARGET: {} | ATTACK_TARGET: {}",
+//                    this.getBrain().getActiveActivities(), hasWalkTarget, hasAttackTarget);
+//        }
+
         ProfilerFiller profilerFiller = Profiler.get();
 
         profilerFiller.push("overhauledCopperGolemBrain");
@@ -313,7 +315,8 @@ public class OverhauledCopperGolem extends CopperGolem implements PolymerEntity 
         level.addFreshEntity(new ExperienceOrb(level, this.getX(), this.getY(), this.getZ(), random.nextInt(7) + 1));
 
         // Audio feedback is crucial!
-        this.playSound(SoundEvents.ANVIL_USE, 0.8F, 1.5F); // High-pitched anvil ding
+        //this.playSound(SoundEvents.ANVIL_USE, 0.8F, 1.5F); // High-pitched anvil ding
+        this.playSound(SoundEvents.COPPER_GOLEM_SPAWN);
     }
 
 

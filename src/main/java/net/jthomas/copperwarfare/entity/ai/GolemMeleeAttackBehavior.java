@@ -74,7 +74,8 @@ public class GolemMeleeAttackBehavior extends Behavior<CopperGolem> {
                     Copperwarfare.LOGGER.info("[AI] SUCCESSFUL HIT...");
                     // Apply standard vanilla knockback
                     if (target instanceof LivingEntity livingEnemy) {
-                        float knockbackStrength = 0.5f;
+                        // knockback scales inversely with attack speed
+                        float knockbackStrength = 0.25f * (1 / overhauled.getTraits().atkSpeed());
                         livingEnemy.knockback(knockbackStrength,
                                 Mth.sin(overhauled.getYRot() * ((float)Math.PI / 180F)),
                                 -Mth.cos(overhauled.getYRot() * ((float)Math.PI / 180F))
